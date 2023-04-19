@@ -1,5 +1,6 @@
 const {Router}= require('express')
 const router = Router()
+const mongoose = require('mongoose')
 const Cart = require('../models/carts.models')
 const Products = require('../models/products.models')
 
@@ -15,20 +16,21 @@ router.get('/', async (req, res) => {
 })
 
 
+//POST introduce un producto en un carrito
 router.post('/:cartId/:productId', async (req, res) => {
   try {
     const cart = await Cart.findOne({ _id: req.params.cartId });
     const product = await Products.findOne({_id: req.params.productId});
     if (!product) throw new Error('Product not found');
 
-    const item = cart.productos.find(item => item.product === product.id);
-    if (item) {
-      // Si el producto ya existe en el carrito, aumenta la cantidad en req.body.quantity
-      item.quantity ++
+    const itemIndex = cart.productos.findIndex(item => item.product._id.toString() === req.params.productId);
+    if (itemIndex !== -1) {
+      // Si el producto ya existe en el carrito, aumenta la cantidad en 1
+      cart.productos[itemIndex].quantity += 1;
     } else {
       // Si el producto no existe en el carrito, agrega un nuevo objeto al array de productos
       cart.productos.push({
-        product: product.id,
+        product: req.params.productId,
         quantity: 1
       });
     }
@@ -40,5 +42,92 @@ router.post('/:cartId/:productId', async (req, res) => {
     res.status(500).json({ error: 'Error adding product to cart' });
   }
 });
+
+
+// DELETE del carrito el producto seleccionado
+router.delete('/:cid/products/:pid', async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ _id: req.params.cid });
+    const productIndex = cart.productos.findIndex(item => item.product.equals(new mongoose.Types.ObjectId(req.params.pid)));
+    if (productIndex === -1) throw new Error('Product not found in cart');
+    cart.productos.splice(productIndex, 1);
+    await cart.save();
+    res.json({ message: 'Product removed from cart', cart });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error removing product from cart' });
+  }
+});
+
+// PUT api/carts/:cid
+router.put('/:cid', async (req, res) => {
+  try {
+    const cart = await Cart.findById({_id:req.params.cid});
+    cart.productos = req.body.productos;
+    await cart.save();
+
+    // Paginación de los productos del carrito
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    const results = {};
+    results.status = "success";
+    results.payload = cart.productos.slice(startIndex, endIndex);
+    results.totalPages = Math.ceil(cart.productos.length / limit);
+    results.page = page;
+    results.hasPrevPage = page > 1;
+    results.hasNextPage = endIndex < cart.productos.length;
+    results.prevLink = page > 1 ? `/api/carts/${req.params.cid}?page=${page - 1}&limit=${limit}` : null;
+    results.nextLink = endIndex < cart.productos.length ? `/api/carts/${req.params.cid}?page=${page + 1}&limit=${limit}` : null;
+
+    res.json(results);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error updating cart' });
+  }
+});
+
+
+// PUT api/carts/:cid/products/:pid
+router.put('/:cid/products/:pid', async (req, res) => {
+  try {
+    const cart = await Cart.findById(req.params.cid);
+    const item = cart.productos.find(item => item.product == req.params.pid);
+    if (!item) throw new Error('Product not found in cart');
+    item.quantity = req.body.quantity;
+    await cart.save();
+    res.json({ message: 'Cart updated', cart });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error updating cart' });
+  }
+});
+
+// DELETE api/carts/:cid elimina los productos del carrito
+router.delete('/:cid', async (req, res) => {
+  try {
+    const cart = await Cart.findById(req.params.cid);
+    cart.productos = [];
+    await cart.save();
+    res.json({ message: 'All products removed from cart', cart });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error removing products from cart' });
+  }
+});
+
+// GET api/carts/:cid 
+router.get('/:cid', async (req, res) => {
+  try {
+    const cart = await Cart.findById(req.params.cid).populate('productos.product');
+    res.json(cart);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Error getting cart' });
+  }
+});
+
 
 module.exports = router
