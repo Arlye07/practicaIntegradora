@@ -1,15 +1,22 @@
 const {Router}= require('express')
-const router = Router()
 const Products = require('../models/products.models')
 const mongoosePaginate =require ('mongoose-paginate-v2')
+const Cart = require ('../models/carts.models')
+const router = Router()
 
 router.get('/', async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit) || 10 ;
   const page = parseInt(req.query.page) || 1;
   const sort = req.query.sort === 'asc' ? 'price' : req.query.sort === 'desc' ? '-price' : null;
-  const query = req.query.query ? { type: req.query.query } : {};
-
+  const query = req.query.query ? { $or: [{ name: { $regex: req.query.query, $options: 'i' } }, { description: { $regex: req.query.query, $options: 'i' } }] } : {};
   try {
+    let cartId = req.cookies.cartId;
+    if (!cartId) {
+      const newCart = await Cart.create({});
+      cartId = newCart._id.toString();
+      res.cookie('cartId', cartId, { maxAge: 3600000 });
+    }
+
     const products = await Products.paginate(query, {
       limit: limit,
       page: page,
@@ -21,12 +28,13 @@ router.get('/', async (req, res) => {
     const currentPage = products.page;
     const hasPrevPage = products.hasPrevPage;
     const hasNextPage = products.hasNextPage;
-    const prevLink = hasPrevPage ? `http://${req.headers.host}/products?page=${prevPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
-    const nextLink = hasNextPage ? `http://${req.headers.host}/products?page=${nextPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
+    const prevLink = hasPrevPage ? `http://${req.headers.host}/api/dbProducts?page=${prevPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
+    const nextLink = hasNextPage ? `http://${req.headers.host}/api/dbProducts?page=${nextPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
 
-    res.status(200).json({
-      status: 'success',
-      payload: products.docs,
+    res.render('products.handlebars', {
+      title: 'Lista de Productos',
+      products: products.docs,
+      cartId: cartId,
       totalPages: totalPages,
       prevPage: prevPage,
       nextPage: nextPage,
@@ -34,7 +42,9 @@ router.get('/', async (req, res) => {
       hasPrevPage: hasPrevPage,
       hasNextPage: hasNextPage,
       prevLink: prevLink,
-      nextLink: nextLink
+      nextLink: nextLink,
+      allowProtoPropertiesByDefault: true,
+      allowProtoMethodsByDefault: true
     });
   } catch (err) {
     res.status(500).json({
@@ -43,6 +53,47 @@ router.get('/', async (req, res) => {
     });
   }
 });
+
+//  router.get('/', async (req, res) => {
+//    const limit = parseInt(req.query.limit) || 10;
+//    const page = parseInt(req.query.page) || 1;
+//    const sort = req.query.sort === 'asc' ? 'price' : req.query.sort === 'desc' ? '-price' : null;
+//    const query = req.query.query ? { type: req.query.query } : {};
+
+//    try {
+//      const products = await Products.paginate(query, {
+//        limit: limit,
+//        page: page,
+//        sort: sort
+//      });
+//      const totalPages = products.totalPages;
+//      const prevPage = products.prevPage;
+//      const nextPage = products.nextPage;
+//      const currentPage = products.page;
+//      const hasPrevPage = products.hasPrevPage;
+//      const hasNextPage = products.hasNextPage;
+//      const prevLink = hasPrevPage ? `http://${req.headers.host}/products?page=${prevPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
+//      const nextLink = hasNextPage ? `http://${req.headers.host}/products?page=${nextPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
+
+//      res.status(200).json({
+//        status: 'success',
+//        payload: products.docs,
+//        totalPages: totalPages,
+//        prevPage: prevPage,
+//        nextPage: nextPage,
+//        page: currentPage,
+//        hasPrevPage: hasPrevPage,
+//        hasNextPage: hasNextPage,
+//        prevLink: prevLink,
+//        nextLink: nextLink
+//     });
+//    } catch (err) {
+//      res.status(500).json({
+//        status: 'error',
+//        message: err.message
+//      });
+//    }
+//  });
 
 router.post('/', async (req, res) => {
   try {

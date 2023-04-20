@@ -1,8 +1,8 @@
 const express = require("express");
+const cookieParser = require('cookie-parser')
 const port = 8080;
 const app = express();
 const {Server} = require('socket.io')
-const handlebars = require('express-handlebars')
 const mongoConnect = require('../db/index')
 const router = require('./routes/index')
 const Message = require('./dao/models/messages.models')
@@ -10,9 +10,16 @@ const Message = require('./dao/models/messages.models')
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.use(cookieParser());
 
 //parametros handlebars
-app.engine('handlebars', handlebars.engine())
+const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access');
+const handlebars = require('express-handlebars');
+const hbs = handlebars.create({
+  handlebars: allowInsecurePrototypeAccess(require('handlebars')),
+  defaultLayout: 'main'
+});
+app.engine('handlebars', hbs.engine);
 app.set('views',__dirname + '/views')
 app.set('view engine','handlebars')
 

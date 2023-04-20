@@ -59,38 +59,20 @@ router.delete('/:cid/products/:pid', async (req, res) => {
   }
 });
 
-// PUT api/carts/:cid
+// PUT actualizar el carrito con un arreglo de productos
 router.put('/:cid', async (req, res) => {
   try {
-    const cart = await Cart.findById({_id:req.params.cid});
+    const cart = await Cart.findById(req.params.cid);
     cart.productos = req.body.productos;
     await cart.save();
-
-    // Paginación de los productos del carrito
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-
-    const results = {};
-    results.status = "success";
-    results.payload = cart.productos.slice(startIndex, endIndex);
-    results.totalPages = Math.ceil(cart.productos.length / limit);
-    results.page = page;
-    results.hasPrevPage = page > 1;
-    results.hasNextPage = endIndex < cart.productos.length;
-    results.prevLink = page > 1 ? `/api/carts/${req.params.cid}?page=${page - 1}&limit=${limit}` : null;
-    results.nextLink = endIndex < cart.productos.length ? `/api/carts/${req.params.cid}?page=${page + 1}&limit=${limit}` : null;
-
-    res.json(results);
+    res.json({ message: 'Cart updated', cart });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Error updating cart' });
   }
 });
 
-
-// PUT api/carts/:cid/products/:pid
+// PUT actualizar SÓLO la cantidad de ejemplares del producto por cualquier cantidad
 router.put('/:cid/products/:pid', async (req, res) => {
   try {
     const cart = await Cart.findById(req.params.cid);
@@ -118,16 +100,16 @@ router.delete('/:cid', async (req, res) => {
   }
 });
 
-// GET api/carts/:cid 
+// GET muestra un carrito en especifico
 router.get('/:cid', async (req, res) => {
   try {
-    const cart = await Cart.findById(req.params.cid).populate('productos.product');
-    res.json(cart);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: 'Error getting cart' });
-  }
-});
+      const cart = await Cart.findById(req.params.cid).populate('productos.product');
+      res.status(200).render('carts.handlebars', {cart});
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: 'Error getting cart' });
+    }
+  });
 
 
 module.exports = router

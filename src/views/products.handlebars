@@ -1,14 +1,25 @@
-<h2>Products</h2>
-
-<form action="" id="newProduct">
-    <label for="">Nombre del producto</label>
-    <input type="text" id="title">
-
-     <label for="">Precio</label>
-    <input type="number" id="price">
-
-<button type="submit"> Crear Producto</button>
-</form>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/index.js"></script>
+<h1>Products</h1>
+<ul>
+{{#each products}}
+  <li>
+    <h2>{{name}}</h2>
+    <p>{{description}}</p>
+    <p>Price: {{price}}</p>
+    <p>Category: {{category}}</p>
+    {{#if ../cartId}}
+    <form method="POST" action="/api/dbCarts/{{../cartId}}/{{this._id}}">
+      <input type="hidden" name="product_id" value="{{_id}}">
+      <button type="submit">Add to cart</button>
+    </form>
+    {{/if}}
+  </li>
+{{/each}}
+</ul>
+<div>
+  {{#if prevLink}}
+  <a href="{{prevLink}}">Prev</a>
+  {{/if}}
+  {{#if nextLink}}
+  <a href="{{nextLink}}">Next</a>
+  {{/if}}
+</div>
