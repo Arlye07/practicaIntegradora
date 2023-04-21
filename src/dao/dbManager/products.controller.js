@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     if (!cartId) {
       const newCart = await Cart.create({});
       cartId = newCart._id.toString();
-      res.cookie('cartId', cartId, { maxAge: 3600000 });
+      res.cookie('cartId', cartId, { maxAge: 3000000 });
     }
 
     const products = await Products.paginate(query, {

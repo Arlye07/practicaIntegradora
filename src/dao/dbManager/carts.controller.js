@@ -11,12 +11,12 @@ router.get('/', async (req, res) => {
     res.status(201).json(newCart)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Error al crear un nuevo carrito' })
+    res.status(500).json({ error: 'Error' })
   }
 })
 
 
-//POST introduce un producto en un carrito
+//POST agrega un producto en un carrito
 router.post('/:cartId/:productId', async (req, res) => {
   try {
     const cart = await Cart.findOne({ _id: req.params.cartId });
@@ -25,10 +25,8 @@ router.post('/:cartId/:productId', async (req, res) => {
 
     const itemIndex = cart.productos.findIndex(item => item.product._id.toString() === req.params.productId);
     if (itemIndex !== -1) {
-      // Si el producto ya existe en el carrito, aumenta la cantidad en 1
       cart.productos[itemIndex].quantity += 1;
     } else {
-      // Si el producto no existe en el carrito, agrega un nuevo objeto al array de productos
       cart.productos.push({
         product: req.params.productId,
         quantity: 1
@@ -44,7 +42,7 @@ router.post('/:cartId/:productId', async (req, res) => {
 });
 
 
-// DELETE del carrito el producto seleccionado
+// DELETE el producto del carrito elegido
 router.delete('/:cid/products/:pid', async (req, res) => {
   try {
     const cart = await Cart.findOne({ _id: req.params.cid });
@@ -59,7 +57,7 @@ router.delete('/:cid/products/:pid', async (req, res) => {
   }
 });
 
-// PUT actualizar el carrito con un arreglo de productos
+// PUT  va a actualiza el carrito con un arreglo de productos
 router.put('/:cid', async (req, res) => {
   try {
     const cart = await Cart.findById(req.params.cid);
@@ -72,7 +70,7 @@ router.put('/:cid', async (req, res) => {
   }
 });
 
-// PUT actualizar SÓLO la cantidad de ejemplares del producto por cualquier cantidad
+// PUT actualizar la cantidad de producto por cualquier cantidad
 router.put('/:cid/products/:pid', async (req, res) => {
   try {
     const cart = await Cart.findById(req.params.cid);
@@ -87,7 +85,7 @@ router.put('/:cid/products/:pid', async (req, res) => {
   }
 });
 
-// DELETE api/carts/:cid elimina los productos del carrito
+// DELETE api/carts/:cid va a eliminar los productos del carrito
 router.delete('/:cid', async (req, res) => {
   try {
     const cart = await Cart.findById(req.params.cid);
@@ -100,7 +98,7 @@ router.delete('/:cid', async (req, res) => {
   }
 });
 
-// GET muestra un carrito en especifico
+// GET /:cid
 router.get('/:cid', async (req, res) => {
   try {
       const cart = await Cart.findById(req.params.cid).populate('productos.product');
