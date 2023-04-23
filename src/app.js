@@ -4,13 +4,28 @@ const port = 8080;
 const app = express();
 const {Server} = require('socket.io')
 const mongoConnect = require('../db/index')
-const router = require('./routes/index')
 const Message = require('./dao/models/messages.models')
+const session = require('express-session')
+const MongoStore = require('connect-mongo')
+const router = require('./routes/index')
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(cookieParser());
+app.use(
+  session({
+    store: MongoStore.create({
+      mongoUrl:
+        'mongodb+srv://admin:admin@ecommerce.ndni8ke.mongodb.net/ecommerce?retryWrites=true&w=majority',
+      mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true },
+    }),
+    secret: 'coderSecret',
+    resave: false,
+    saveUninitialized: false,
+  })
+)
 
 //parametros handlebars
 const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access');
