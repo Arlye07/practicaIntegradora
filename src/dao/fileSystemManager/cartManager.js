@@ -1,6 +1,6 @@
 const fs = require('fs')
 const express = require('express');
-const cartRouter = require('../src/routes/cart.router');
+const cartRouter = require('../../routes/cart.router');
 const app = express();
 const jsonCart = '../data/Carts.json'
 
