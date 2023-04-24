@@ -7,7 +7,7 @@ router.post('/', async (req, res) => {
     try {
       const { first_name, last_name, email, age, password } = req.body
   
-      // Verificar si el usuario es admin
+      
       let role = 'usuario'
       if (email === 'admin@gmail.com' && password === 'admin') {
         role = 'administrador'
