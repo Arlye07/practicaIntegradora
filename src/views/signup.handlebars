@@ -21,7 +21,7 @@
 </form>
 
 <script>
-    const form = document.getElementById('signupForm')
+  const form = document.getElementById('signupForm')
 
 form.addEventListener('submit', e => {
   e.preventDefault()
@@ -45,6 +45,9 @@ form.addEventListener('submit', e => {
   })
     .then(response => response.json())
     .then(data => console.log(data))
+    .then(() => {
+        window.location.href = '/api/login';
+      })
     .catch(error => console.log(error))
 })
 </script>

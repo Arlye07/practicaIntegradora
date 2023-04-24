@@ -1,43 +1,45 @@
 const { Router } = require('express')
 const Users = require('../models/users.models')
-
+const publicAccess = require('../../middlewares/publicAccess')
 const router = Router()
 
-router.post('/', async (req, res) => {
-  try {
-    const { email, password } = req.body
-
-    const user = await Users.findOne({ email })
-    console.log(user)
-    if (!user)
-      return res.status(400).json({
-        status: 'error',
-        error: 'El usuario y la contraseña no coincide',
-      })
-
-    if (user.password !== password)
-      return res.status(400).json({
-        status: 'error',
-        error: 'El usuario y la contraseña no coincide',
-      })
-
-    req.session.user = {
-      first_name: user.first_name,
-      last_name: user.last_name,
-      email: user.email,
+router.get('/', (req, res) => {
+    try {
+      res.render('login.handlebars')
+    } catch (error) {
+      res.status(400).json({error: error})
     }
+  })
 
-    res.json({ status: 'success', message: 'Sesión iniciada' })
-  } catch (error) {
-    console.log(error.message)
-    res.status(500).json({ status: 'error', error: 'Internal Server Error' })
-  }
-})
+  router.post('/', async (req, res, next) => {
+    try {
+      const { email, password } = req.body
+      const user = await Users.findOne({ email })
+      if (!user)
+        return next('El usuario y la contraseña no coincide')
+  
+      if (user.password !== password)
+        return next('El usuario y la contraseña no coincide')
+  
+      req.session.user = {
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        role: user.role
+      }
+      next()
+    } catch (error) {
+      console.log(error.message)
+      res.status(500).json({ status: 'error', error: 'Internal Server Error' })
+    }
+  }, publicAccess, (req, res) => {
+    res.status(500).json({message: 'usuario no encontrado'})
+  })
 
 router.get('/logout', (req, res) => {
   req.session.destroy(error => {
     if (error) return res.json({ error })
-    res.redirect('/login')
+    res.redirect('/api/login')
   })
 })
 

@@ -5,7 +5,6 @@ const dbProductsRouter= require("../dao/dbManager/products.controller")
 const messageController= require("../dao/dbManager/messages.controller")
 const userController= require("../dao/dbManager/users.controller")
 const authController= require("../dao/dbManager/auth.controller")
-const viewsTemplateController =require("../dao/dbManager/viewsTemplateController")
 
 const router = app => {
   app.use('/api/products', productsRouter);
@@ -15,7 +14,6 @@ const router = app => {
   app.use('/api/messages', messageController);
   app.use('/api/register', userController);
   app.use('/api/login', authController);
-  app.use('/api', viewsTemplateController);
 }
 
 module.exports = router
