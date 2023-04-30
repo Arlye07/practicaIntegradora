@@ -7,6 +7,8 @@ const mongoConnect = require('../db/index')
 const Message = require('./dao/models/messages.models')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')
+const passport = require ('passport')
+const initializePassport =require('./config/passport.config')
 const router = require('./routes/index')
 
 
@@ -27,6 +29,9 @@ app.use(
   })
 )
 
+initializePassport()
+app.use(passport.initialize())
+app.use(passport.session())
 //parametros handlebars
 const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access');
 const handlebars = require('express-handlebars');

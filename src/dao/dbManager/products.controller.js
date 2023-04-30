@@ -56,8 +56,13 @@ router.get('/', privateAccess, async (req, res) => {
     const message = user
       ? `Bienvenido ${user.role} ${user.first_name} ${user.last_name}!`
       : null;
+    // Buscar el carrito del usuario por el id del usuario
+    const cart = await Cart.findOne({ userId: user._id });
+    // parsear el objeto con el id del usuario a cadena
+    const cartId = cart._id.toString()
     res.render('products.handlebars', {
       title: 'Lista de Productos',
+      cartId: cartId,
       products: products.docs,
       totalPages: totalPages,
       prevPage: prevPage,

@@ -1,46 +1,71 @@
-const { Router } = require('express')
-const Users = require('../models/users.models')
-const publicAccess = require('../../middlewares/publicAccess')
-const router = Router()
+const { Router } = require("express");
+const Users = require("../models/users.models");
+const publicAccess = require("../../middlewares/publicAccess");
+const { isValidPassword } = require("../../utils/cryptPassport.utils");
+const passport = require("passport");
+const router = Router();
 
-router.get('/', (req, res) => {
-    try {
-      res.render('login.handlebars')
-    } catch (error) {
-      res.status(400).json({error: error})
-    }
-  })
+router.get("/", (req, res) => {
+  try {
+    res.render("login.handlebars");
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+});
 
-  router.post('/', async (req, res, next) => {
+router.get("/faillogin", (req, res) => {
+  console.log("falló estrategia de autenticacion");
+  res.json({ error: "Failed login" });
+});
+
+router.post(
+  "/",
+  passport.authenticate("login", { failureRedirect: "login/faillogin" }),
+  async (req, res) => {
     try {
-      const { email, password } = req.body
-      const user = await Users.findOne({ email })
-      if (!user)
-        return next('El usuario y la contraseña no coincide')
-  
-      if (user.password !== password)
-        return next('El usuario y la contraseña no coincide')
-  
-      req.session.user = {
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-        role: user.role
+      if (!req.user) {
+        return res
+          .status(401)
+          .json({
+            status: "error",
+            error: "Usuario y contraseña no coinciden",
+          });
       }
-      next()
+      // Establecer una session con los datos del usuario autenticado
+      req.session.user = {
+        _id: req.user._id,
+        first_name: req.user.first_name,
+        last_name: req.user.last_name,
+        email: req.user.email,
+        role: req.user.role,
+      };
+      res.status(200).json({ status: "succes", message: "sesion establecida" });
     } catch (error) {
-      console.log(error.message)
-      res.status(500).json({ status: 'error', error: 'Internal Server Error' })
+      console.log(error.message);
+      res.status(500).json({ status: "error", error: "Internal Server Error" });
     }
-  }, publicAccess, (req, res) => {
-    res.status(500).json({message: 'usuario no encontrado'})
-  })
+  }
+);
 
-router.get('/logout', (req, res) => {
-  req.session.destroy(error => {
-    if (error) return res.json({ error })
-    res.redirect('/api/login')
-  })
-})
+router.get(
+  "/github",
+  passport.authenticate("github", { scope: ["user: email"] }),
+  async (req, res) => {}
+);
 
-module.exports = router
+router.get(
+  "/githubcallback",
+  passport.authenticate("github", { failureRedirect: "/faillogin" }),
+  async (req, res) => {
+    req.session.user = req.user;
+    res.redirect("/api/dbProducts");
+  }
+);
+
+router.get("/logout", (req, res) => {
+  req.session.destroy((error) => {
+    if (error) return res.json({ error });
+    res.redirect("/api/login");
+  });
+});
+module.exports = router;
