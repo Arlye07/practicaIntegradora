@@ -37,7 +37,9 @@ router.post(
         first_name: req.user.first_name,
         last_name: req.user.last_name,
         email: req.user.email,
+        password: req.user.password,
         role: req.user.role,
+        cartId: req.user.cartId
       };
       res.status(200).json({ status: "succes", message: "sesion establecida" });
     } catch (error) {

@@ -12,10 +12,8 @@ const collectionSchema = new mongoose.Schema({
       type: Number,
       default: 1
     }
-  }],
-  userId: {
-    type: String
-  }
+  }]
+  
 })
 
 const Cart = mongoose.model(collectionName, collectionSchema)
