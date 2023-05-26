@@ -5,7 +5,7 @@
 * [Student](#student)
 
 ## General info
-This project is about E-commerce, learning in backend class, about mongoBD, JS, handlebars, and more. As soon as the teachers give the theory class, the students must to do this project.
+This project is about E-commerce, learning in backend class, about mongoDB, JS, handlebars, and more. As soon as the teachers give the theory class, the students must to do this project.
 	
 ## Components
 Project is created with:
